@@ -61,6 +61,23 @@ func addPost(postImage: UIImage, thread: String, username: String) {
     let path = "\(firStorageImagesPath)/\(UUID().uuidString)"
     
     // YOUR CODE HERE
+    let date = Date();
+    let formatter = DateFormatter()
+    formatter.dateFormat = dateFormat
+    formatter.locale = Locale.current
+    formatter.timeZone = TimeZone.current
+    
+    let postRef = dbRef.child(firPostsNode).childByAutoId()
+    let key = postRef.key
+    let postContent = [
+        firDateNode:formatter.string(from: date),
+        firImagePathNode:path,
+        firThreadNode:thread,
+        firUsernameNode:username,
+    ]
+    dbRef.child(firPostsNode).child(key).setValue(postContent)
+    
+    store(data: data, toPath: path)
 }
 
 /*
@@ -75,6 +92,13 @@ func store(data: Data, toPath path: String) {
     let storageRef = FIRStorage.storage().reference()
     
     // YOUR CODE HERE
+    let storagePath = storageRef.child(path)
+    
+    let _ = storagePath.put(data, metadata: nil) { (metadata, error) in
+        if (error != nil) {
+            print("Error")
+        }
+    }
 }
 
 
@@ -99,7 +123,32 @@ func getPosts(user: CurrentUser, completion: @escaping ([Post]?) -> Void) {
     let dbRef = FIRDatabase.database().reference()
     var postArray: [Post] = []
     
+    
     // YOUR CODE HERE
+    let postRef = dbRef.child(firPostsNode)
+    postRef.observe(.value, with: { (snapshot) in
+        if (snapshot.value != nil) {
+            let postDict = snapshot.value as? [String : AnyObject] ?? [:]
+            let readPostRef = dbRef.child(firUsersNode).child(user.id).child(firReadPostsNode)
+            readPostRef.observe(.value, with: { (snap) in
+                if (snap.value != nil) {
+                    let readPostDict = snap.value as? [String : AnyObject] ?? [:]
+                    for (key, value) in postDict {
+                        let adjValue = value as! Dictionary<String, String>
+                        
+                        let read = readPostDict[key] != nil
+                        let post = Post(id: user.id, username: adjValue[firUsernameNode]!, postImagePath: adjValue[firImagePathNode]!, thread: adjValue[firThreadNode]!, dateString: adjValue[firDateNode]!, read: read)
+                        postArray.append(post)
+                    }
+                    completion(postArray)
+                } else {
+                    completion(nil)
+                }
+            })
+        } else {
+            completion(nil)
+        }
+    })
 }
 
 func getDataFromPath(path: String, completion: @escaping (Data?) -> Void) {
