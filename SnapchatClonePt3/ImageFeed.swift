@@ -76,7 +76,7 @@ func addPost(postImage: UIImage, thread: String, username: String) {
         firUsernameNode:username,
     ]
     dbRef.child(firPostsNode).child(key).setValue(postContent)
-    
+    print("Posting from \(username)")
     store(data: data, toPath: path)
 }
 
@@ -95,10 +95,11 @@ func store(data: Data, toPath path: String) {
     let storagePath = storageRef.child(path)
     
     let _ = storagePath.put(data, metadata: nil) { (metadata, error) in
-        if (error != nil) {
-            print("Error")
+        if let error = error {
+            print(error)
         }
     }
+    print("Store image")
 }
 
 
@@ -133,11 +134,19 @@ func getPosts(user: CurrentUser, completion: @escaping ([Post]?) -> Void) {
             readPostRef.observe(.value, with: { (snap) in
                 if (snap.value != nil) {
                     let readPostDict = snap.value as? [String : AnyObject] ?? [:]
+                    print("dict")
+                    print(readPostDict.count)
                     for (key, value) in postDict {
                         let adjValue = value as! Dictionary<String, String>
                         
-                        let read = readPostDict[key] != nil
-                        let post = Post(id: user.id, username: adjValue[firUsernameNode]!, postImagePath: adjValue[firImagePathNode]!, thread: adjValue[firThreadNode]!, dateString: adjValue[firDateNode]!, read: read)
+                        var read = false;
+                        for(_, rvalue) in readPostDict {
+                            if(rvalue as! String == key) {
+                                read = true;
+                            }
+                        }
+
+                        let post = Post(id: key, username: adjValue[firUsernameNode]!, postImagePath: adjValue[firImagePathNode]!, thread: adjValue[firThreadNode]!, dateString: adjValue[firDateNode]!, read: read)
                         postArray.append(post)
                     }
                     completion(postArray)
@@ -155,7 +164,7 @@ func getDataFromPath(path: String, completion: @escaping (Data?) -> Void) {
     let storageRef = FIRStorage.storage().reference()
     storageRef.child(path).data(withMaxSize: 5 * 1024 * 1024) { (data, error) in
         if let error = error {
-            print(error)
+//            print(error)
         }
         if let data = data {
             completion(data)

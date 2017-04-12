@@ -21,6 +21,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     override func viewDidAppear(_ animated: Bool) {
         // Checks if user is already signed in and skips login
+
         if FIRAuth.auth()?.currentUser != nil {
             self.performSegue(withIdentifier: "loginToMain", sender: self)
         }
@@ -43,7 +44,19 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         guard let passwordText = passwordField.text else { return }
         
         // YOUR CODE HERE
-        FIRAuth.auth()!.signIn(withEmail: emailText, password: passwordText);
+        print("starting login")
+        FIRAuth.auth()!.signIn(withEmail: emailText, password: passwordText) { (user, error) in
+            if error != nil {
+                let alertController = UIAlertController(title: "Error", message: "Sign in failed, try again", preferredStyle: UIAlertControllerStyle.alert)
+                alertController.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.default,handler: nil))
+                self.present(alertController, animated: true, completion:nil)
+            } else {
+                print("login success")
+                self.performSegue(withIdentifier: "loginToMain", sender: self)
+            }
+            
+        }
+        
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {

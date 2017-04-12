@@ -46,9 +46,11 @@ class SignupViewController: UIViewController, UITextFieldDelegate {
                     let changeRequest = user?.profileChangeRequest()
                     changeRequest?.displayName = name
                     changeRequest?.commitChanges()
+                    self.performSegue(withIdentifier: "loginToMain", sender: self)
                 }
             } else {
-                let alertController = UIAlertController(title: "Error", message: String(describing:error!), preferredStyle: .actionSheet)
+                let alertController = UIAlertController(title: "Error", message: String(describing:error!), preferredStyle: UIAlertControllerStyle.alert)
+                alertController.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.default,handler: nil))
                 self.present(alertController, animated: true, completion:nil)
             }
         }

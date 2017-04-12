@@ -41,9 +41,10 @@ class CurrentUser {
                 for (_, value) in postDict {
                     postArray.append(value as! String)
                 }
+                completion(postArray)
             }
         })
-        completion(postArray)
+        
     }
     
     /*
@@ -57,7 +58,10 @@ class CurrentUser {
         // TODO
         let postRef = dbRef.child(firUsersNode).child(id).child(firReadPostsNode).childByAutoId()
         let key = postRef.key
-    dbRef.child(firUsersNode).child(id).child(firReadPostsNode).child(key).setValue(postID)
+        print("Sending read info")
+
+        dbRef.child(firUsersNode).child(id).child(firReadPostsNode).child(key).setValue(postID)
+        
 
     }
     
